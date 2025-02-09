@@ -842,11 +842,11 @@ class User extends Authenticatable
      * This method returns the timezone associated with the user. If no timezone is set,
      * it defaults to 'Asia/Singapore'.
      *
-     * @return string the user's timezone, or 'Asia/Singapore' if not set
+     * @return string the user's timezone, or 'UTC' if not set
      */
     public function getTimezone(): string
     {
-        return data_get($this, 'timezone', 'Asia/Singapore');
+        return data_get($this, 'timezone', 'UTC');
     }
 
     /**
