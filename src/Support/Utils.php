@@ -766,7 +766,7 @@ class Utils
      *
      * @return string
      */
-    public static function moneyFormat($amount, $currency = 'USD')
+    public static function moneyFormat($amount, $currency = 'EGP')
     {
         $amount = static::numbersOnly($amount);
         $money  = new \Cknow\Money\Money($amount, $currency);
