@@ -31,7 +31,10 @@ class FleetbasePaginatedResourceResponse extends PaginatedResourceResponse
     protected function meta($paginated)
     {
         $metaData = parent::meta($paginated);
-
+        $time = 0;
+        if (defined('LARAVEL_START')) {
+            $time = round((microtime(true) - LARAVEL_START) * 1000);
+        }
         return [
             'total'        => $metaData['total'] ?? null,
             'per_page'     => $metaData['per_page'] ?? null,
@@ -39,7 +42,7 @@ class FleetbasePaginatedResourceResponse extends PaginatedResourceResponse
             'last_page'    => $metaData['last_page'] ?? null,
             'from'         => $metaData['from'] ?? null,
             'to'           => $metaData['to'] ?? null,
-            'time'         => round((microtime(true) - LARAVEL_START) * 1000),
+            'time'         => $time,
         ];
     }
 }
