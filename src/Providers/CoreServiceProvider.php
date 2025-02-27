@@ -6,7 +6,6 @@ use Fleetbase\Support\EnvironmentMapper;
 use Fleetbase\Support\NotificationRegistry;
 use Fleetbase\Support\Utils;
 use Illuminate\Console\Scheduling\Schedule;
-use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
@@ -31,6 +30,16 @@ class CoreServiceProvider extends ServiceProvider
     ];
 
     /**
+     * The global middlewares to be registered with the service provider.
+     *
+     * @var array
+     */
+    public $globalMiddlewares = [
+        \Fleetbase\Http\Middleware\RequestTimer::class,
+        \Fleetbase\Http\Middleware\ResetJsonResourceWrap::class,
+    ];
+
+    /**
      * The middleware groups registered with the service provider.
      *
      * @var array
@@ -43,8 +52,6 @@ class CoreServiceProvider extends ServiceProvider
             \Fleetbase\Http\Middleware\SetupFleetbaseSession::class,
             \Fleetbase\Http\Middleware\AuthorizationGuard::class,
             \Fleetbase\Http\Middleware\TrackPresence::class,
-            \Spatie\ResponseCache\Middlewares\CacheResponse::class,
-            \Fleetbase\Http\Middleware\ClearCacheAfterDelete::class,
         ],
         'fleetbase.api' => [
             'throttle:80,1',
@@ -52,8 +59,6 @@ class CoreServiceProvider extends ServiceProvider
             \Fleetbase\Http\Middleware\AuthenticateOnceWithBasicAuth::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             \Fleetbase\Http\Middleware\LogApiRequests::class,
-            \Spatie\ResponseCache\Middlewares\CacheResponse::class,
-            \Fleetbase\Http\Middleware\ClearCacheAfterDelete::class,
         ],
     ];
 
@@ -64,6 +69,7 @@ class CoreServiceProvider extends ServiceProvider
      */
     public $commands = [
         \Fleetbase\Console\Commands\Recovery::class,
+        \Fleetbase\Console\Commands\QueueStatusCommand::class,
         \Fleetbase\Console\Commands\AssignAdminRoles::class,
         \Fleetbase\Console\Commands\ForceResetDatabase::class,
         \Fleetbase\Console\Commands\CreateDatabase::class,
@@ -122,8 +128,6 @@ class CoreServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        JsonResource::withoutWrapping();
-
         $this->__hotfixCommonmarkDeprecation();
         $this->registerCommands();
         $this->scheduleCommands(function ($schedule) {
@@ -260,6 +264,14 @@ class CoreServiceProvider extends ServiceProvider
      */
     public function registerMiddleware(): void
     {
+        // Global middlewares
+        if ($this->globalMiddlewares) {
+            $kernel = $this->app->make(\Illuminate\Contracts\Http\Kernel::class);
+            foreach ($this->globalMiddlewares as $middleware) {
+                $kernel->pushMiddleware($middleware);
+            }
+        }
+
         foreach ($this->middleware as $group => $middlewares) {
             foreach ($middlewares as $middleware) {
                 $this->app->router->pushMiddlewareToGroup($group, $middleware);

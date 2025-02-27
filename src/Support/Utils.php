@@ -646,7 +646,8 @@ class Utils
                 $uuid = static::getUuid($t, $where);
 
                 if ($uuid) {
-                    if (isset($options['full']) && $options['full'] === true) {
+                    $returnWithTable = static::or($options, ['full', 'with_table', 'array']) === true;
+                    if ($returnWithTable) {
                         return [
                             'uuid'  => $uuid,
                             'table' => $t,
@@ -2633,5 +2634,11 @@ class Utils
         }
 
         return (int) $amount;
+    }
+
+    public static function formatPhoneNumber(string $phone): string
+    {
+        // Remove dashes and spaces
+        return str_replace(['-', ' '], '', $phone);
     }
 }
